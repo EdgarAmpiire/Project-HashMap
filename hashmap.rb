@@ -35,6 +35,77 @@ class HashMap
       @size += 1
     end
   end
-  
 
+  def get(key)
+    idx = index(key)
+    check_bounds(idx)
+
+    bucket = @buckets[idx]
+    pair = bucket.find { |entry| entry[0] == key }
+    pair ? pair[1] : nil
+  end
+
+  def has?(key)
+    idx = index(key)
+    check_bounds(idx)
+
+    bucket = @buckets[idx]
+    bucket.any? { |entry| entry[0] == key}
+  end
+
+  def remove(key)
+    idx = index(key)
+    check_bounds(idx)
+
+    bucket = @buckets[idx]
+    pair = bucket.find { |entry| entry[0] == key}
+
+    if pair
+      bucket.delete(pair)
+      @size -= 1
+      pair[1]
+    else
+      nil
+    end
+  end
+
+  def length
+    @size
+  end
+
+  def clear
+    @buckets = Array.new(@capacity) { [] }
+    @size = 0
+  end
+
+  def keys
+    @buckets.flatten(1).map(&:first)
+  end
+
+  def values
+    @buckets.flatten(1).map(&:last)
+  end
+
+  def entries
+    @buckets.flatten(1)
+  end
+
+  private
+
+  def check_bounds(index)
+    raise IndexError if index.negative? || index >= @buckets.length
+  end
+
+  def expand_if_needed
+    if @size.to_f / @capacity >= @load_factor
+      old_buckets = @buckets
+      @capacity *= 2
+      @buckets = Array.new(@capacity) { [] }
+      @size = 0
+
+      old_buckets.each do |bucket|
+        bucket.each { |key, value| set(key, value )}
+      end
+    end
+  end
 end
